@@ -52,9 +52,8 @@ class distrib : public contract
     struct config
     {
         account_name token_contract;
-      //  uint8_t token_decimal;
-       // string token_symbol;
-       account_name     primary_key() const { return token_contract; }
+        
+        account_name     primary_key() const { return token_contract; }
 
         EOSLIB_SERIALIZE(config, (token_contract));
     };
@@ -147,24 +146,22 @@ class distrib : public contract
 
     asset get_balance(const account_name account)
     {
-        // config_table config(_self, _self);
-        // auto itr = config.begin();
-        // eosio_assert(itr != config.end(), "token contract is not set");
+        config_table config(_self, _self);
+        auto itr = config.begin();
+        eosio_assert(itr != config.end(), "token contract is not set");
 
-        accounts accountstable(N(merritok5), account);
+        accounts accountstable(itr->token_contract, account);
         auto itr_a = accountstable.begin();
+
+        print ("SYMBOL: ", N(itr_a->balance.symbol.name()), "\n");
        
-        // // return itr_a->balance;
         eosio::print ("#1 LOG...........\n");
         eosio::print (itr_a->balance);
        
         return itr_a->balance;
-        // eosio::token t(N(eosio.token));
-        // eosio::print ("#2 LOG...........\n");
+        // eosio::token t(N(merritok5));
         // const auto sym_name = eosio::symbol_type(S(4,"MRM")).name();
-        // eosio::print ("#3 SYM NAME...........", name{sym_name}, "\n");
-        // const auto my_balance = t.get_balance(N(account), "MRM");
-        // eosio::print ("#4 LOG...........\n");
+        // const auto my_balance = t.get_balance(N(account), sym_name);
         // eosio::print (name{account}, " balance is my_balance");
         // return my_balance;
 
