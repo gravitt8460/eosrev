@@ -6,9 +6,8 @@
 
 //using namespace std;
 
-void distrib::init (const account_name _token_contract){ 
-                   // const uint8_t       _token_decimal,
-                   // const string        _token_symbol) {
+void distrib::init (const account_name _token_contract,
+                    const asset         _example_asset) {
 
     eosio_assert (!isInit(), "Configuration has already been set.");
     parent_table p_table (_self, _self);
@@ -21,18 +20,16 @@ void distrib::init (const account_name _token_contract){
     config_table config (_self, _self);
     config.emplace (_self, [&](auto& c) {
         c.token_contract = _token_contract;
-  //      c.token_decimal = _token_decimal;
-   //     c.token_symbol  = _token_symbol;
+        c.example_asset = _example_asset;
     });
 }
 
+//TODO: Add asset to the set contract function
 void distrib::setcontract (const account_name _token_contract) {
     config_table config (_self, _self);
     auto itr = config.begin();
     config.modify (itr, _self, [&](auto& c) {
         c.token_contract = _token_contract;
-  //      c.token_decimal = _token_decimal;
-   //     c.token_symbol  = _token_symbol;
     });
 }
 
@@ -40,12 +37,10 @@ void distrib::foo() {}
 
 void distrib::distribute () {
 
-    print ("Inside of distribute ...................\n");
     parent_table p_table (_self, _self);
     child_table c_table (_self, _self);
 
     asset balance_to_dist = get_balance (_self);
-    print ("Balance to Distribute: ", balance_to_dist, "\n" );
 
     auto p_itr = p_table.begin();
     while (p_itr != p_table.end()) {
@@ -171,7 +166,6 @@ void distrib::addchild (  const account_name     _parentacct,
 
     c_table.emplace (_self, [&](auto &c) {
         c.child_id      = c_table.available_primary_key();
-        print ("Child ID: ", c.child_id);
         c.child_acct    = _childacct;
         c.share         = _percx100;
         c.parent_acct   = _parentacct;

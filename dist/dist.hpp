@@ -17,7 +17,8 @@ class distrib : public contract
     // @abi action
     void setcontract (const account_name _token_contract);
     // @abi action
-    void init(const account_name _token_contract);
+    void init(const account_name _token_contract,
+                const asset _example_asset);
           //    const uint8_t _token_decimal,
           //    const string _token_symbol);
 
@@ -52,15 +53,13 @@ class distrib : public contract
     struct config
     {
         account_name token_contract;
-        
+        asset        example_asset;
         account_name     primary_key() const { return token_contract; }
 
-        EOSLIB_SERIALIZE(config, (token_contract));
+        EOSLIB_SERIALIZE(config, (token_contract)(example_asset));
     };
 
     typedef eosio::multi_index<N(configs), config> config_table;
-
-    // typedef eosio::singleton<N(dist), N(config), N(dist), config> configs;
 
     // this struct is only used to access the users' EVA balance
     struct account
@@ -153,34 +152,11 @@ class distrib : public contract
         accounts accountstable(itr->token_contract, account);
         auto itr_a = accountstable.begin();
 
-        print ("SYMBOL: ", N(itr_a->balance.symbol.name()), "\n");
-       
-        eosio::print ("#1 LOG...........\n");
-        eosio::print (itr_a->balance);
-       
+        while (itr_a != accountstable.end() && itr_a->balance.symbol != itr->example_asset.symbol) {
+            itr_a++;
+        }
+
         return itr_a->balance;
-        // eosio::token t(N(merritok5));
-        // const auto sym_name = eosio::symbol_type(S(4,"MRM")).name();
-        // const auto my_balance = t.get_balance(N(account), sym_name);
-        // eosio::print (name{account}, " balance is my_balance");
-        // return my_balance;
-
-        // print ("LOG 1 .....................");
-        // symbol_type symbol(S(4,SYS));
-        // print ("Symbol name: ", symbol.name());
-
-        // accounts fromAcc(N(eosio.token),N(account));
-
-        //  print ("LOG 2 .....................");
-
-
-        // const auto& myAcc = fromAcc.get(symbol.name());
-        // print ("LOG 3 .....................");
-
-        // myAcc.balance.print();
-
-        // print ("balance ...", myAcc.balance, "\n");
-        // return myAcc.balance;
     }
 
     void transfer(const account_name from,
@@ -192,10 +168,6 @@ class distrib : public contract
         config_table config(_self, _self);
         auto itr = config.begin();
         eosio_assert(itr != config.end(), "token contract is not set");
-
-        //asset amount = asset{token_amount,
-        //                     string_to_symbol(itr->token_decimal, itr->token_symbol)};
-        
 
         print("---------- Transfer -----------\n");
         print("Token Contract:   ", name{itr->token_contract}, "\n");
