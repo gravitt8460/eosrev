@@ -1,0 +1,119 @@
+
+There are a few different ways to use eosjs. It is possible to send create objects that align to the smart contracts (e.g. create a JS object called 'dist') or you can create and submit the raw transactions. The former provides a layer of abstraction, and the latter is more verbose. I am going to provide examples of the raw transactions so that all of the parameters are clear and I do not abstract anything. However, you can implement this either way you prefer.
+
+Here is how you retrieve Scatter from the window object and instantiate an EOS object.
+
+document.addEventListener('scatterLoaded', scatterExtension => {
+    const scatter = window.scatter
+  
+    const network = { host:"159.65.161.242", port:8888 } // The node where our identites were created
+    const eosOptions = {}
+  
+    const eos = scatter.eos( Eos.Localnet, network, eosOptions )
+  ...
+  })
+
+
+Once you have the eos object, you can submit transactions:
+
+Here is the basic example of a token transfer.  We will use this structure except we will change "eosio.token" for the token account we are using (e.g. "merrimttoken"), and our quantity field will use our symbol rather than SYS.
+
+/** @return {Promise} */
+eos.transaction(
+    {
+      // ...headers,
+      actions: [
+        {
+          account: 'eosio.token',   // account that has the code
+          name: 'transfer',         // name of the action calling
+          authorization: [{
+            actor: 'inita',         // name of account authorizing (
+            permission: 'active'    // permission type
+          }],
+          data: {                   // parameters to the action
+            from: 'inita',          // transfer from acccount
+            to: 'initb',            // transfer to account
+            quantity: '7.0000 SYS', // amount
+            memo: ''                // string memo
+          }
+        }
+      ]
+    }
+    // options -- example: {broadcast: false}
+  )
+
+
+We will also need to create EOS accounts and grant authority from the Merriment user to the token contract.
+
+Here is how to create a new account. Instead of hard-coding the wif and pubkey, we will be using information from Scatter. We will change the creator and payer to be a Merriment account. Also, we will change the staked quantities for network and CPU.
+
+
+
+wif = '5KQwrPbwdL6PhXujxW37FSSQZ1JiwsST4cqQzDeyXtP79zkvFD3'
+pubkey = 'EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV'
+
+eos.transaction(tr => {
+  tr.newaccount({
+    creator: 'eosio',
+    name: 'myaccount',
+    owner: pubkey,
+    active: pubkey
+  })
+
+  tr.buyrambytes({
+    payer: 'eosio',
+    receiver: 'myaccount',
+    bytes: 8192
+  })
+
+  tr.delegatebw({
+    from: 'eosio',
+    receiver: 'myaccount',
+    stake_net_quantity: '10.0000 SYS',
+    stake_cpu_quantity: '10.0000 SYS',
+    transfer: 0
+  })
+})
+
+
+Finally, after we create the account using the above code, we need to update the authority. 
+
+Here is an example for calling updateauth:
+
+- account is the new account that we just created
+- 
+
+
+eos.updateauth({
+    "account": "recentaccount",
+    "permission": "active",
+    "parent": "owner",
+    "auth": {
+        "threshold": 1,
+        "keys": [
+            {
+                "key": "EOS6MRy..",
+                "weight": 1
+            }
+        ],
+        "accounts": [
+            {
+                "permission": {
+                    "actor": "recentaccount",
+                    "permission": "merrimttoken" // account name for token
+                },
+                "weight": 1
+            }
+        ],
+        "waits": [ ]
+    }
+}
+
+
+Resources:
+
+https://get-scatter.com/
+https://get-scatter.com/docs/dev/getting-started
+https://github.com/EOSIO/eosjs
+https://github.com/EOSEssentials/Scatter-Demos
+

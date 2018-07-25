@@ -46,14 +46,16 @@ void distrib::distribute () {
     while (p_itr != p_table.end()) {
         if (p_itr->parent_acct == _self) { p_itr++; continue; }
 
-        auto p_xfer_amount = p_itr->parent_share * balance_to_dist / 10000;
+        auto p_xfer_amount = p_itr->parent_share * balance_to_dist / 100;
         transfer (_self, p_itr->parent_acct, p_xfer_amount, "auto distribution");
 
         auto parent_index = c_table.get_index<N (parent_acct)> ();
         auto c_itr = parent_index.find (p_itr->parent_acct);
         while (c_itr != parent_index.end() && c_itr->parent_acct == p_itr->parent_acct) {
-            auto c_xfer_amount = c_itr->share * p_xfer_amount / 10000;
-            transfer (p_itr->parent_acct, c_itr->child_acct, c_xfer_amount, "auto distribution");
+            asset c_xfer_amount = c_itr->share * p_xfer_amount / 100;
+            if (c_xfer_amount.amount > 0) {
+                transfer (p_itr->parent_acct, c_itr->child_acct, c_xfer_amount, "auto distribution");
+            } 
             c_itr++;
         }
         p_itr++;

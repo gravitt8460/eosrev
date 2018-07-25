@@ -3,10 +3,10 @@
 cleos create account eosio distgrp1 EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn
 cleos create account eosio distgrp2 EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn
 cleos create account eosio distgrp3 EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn
+
 cleos create account eosio distacct1 EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn
 cleos create account eosio distacct2 EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn
 cleos create account eosio distacct3 EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn
-
 cleos create account eosio distacct1 EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn
 cleos create account eosio distacct2 EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn
 cleos create account eosio distacct3 EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn EOS7ckzf4BMgxjgNSYV22rtTXga8R9Z4XWVhYp8TBgnBi2cErJ2hn
@@ -55,8 +55,7 @@ cleos push action merrito12 issue '["dist31", "1000.0000 JKL"]' -p dist31
 cleos push action merrito12 issue '["dist31", "100.0000 XYZ"]' -p dist31
 cleos push action merrito12 issue '["dist31", "1000.0000 MRM"]' -p dist31
 
-
-# INIT THE DIST CONTRACT WITH THE TOKEN CONTRACT AND THE ASSET BEING USED FOR THIS DISTRIBUTION
+# INIT THE DIST CONTRACT WITH THE TOKEN CONTRACT AND THE ASSET BEING USE FOR THIS DISTRIBUTION
 # Note:  THE QUANTITY OF THE ASSET DOES NOT MATTER. IT SIMPLY USES THE SYMBOL FOR COMPARISON PURPOSES
 # FUTURE IMPROVEMENT: ONLY REQUIRE THE SYMBOL NAME RATHER THAN THE ENTIRE ASSET OBJECT
 cleos push action dist31 init '["merrito12", "1.0000 JKL"]' -p dist31
