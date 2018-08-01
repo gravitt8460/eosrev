@@ -15,12 +15,14 @@ class distrib : public contract
     void foo();
 
     // @abi action
-    void setcontract (const account_name _token_contract);
+    void setcontract (const account_name _token_contract, 
+                        const string _token_symbol, 
+                        const uint8_t  _token_precision);
+
     // @abi action
     void init(const account_name _token_contract,
-                const asset _example_asset);
-          //    const uint8_t _token_decimal,
-          //    const string _token_symbol);
+                const string _token_symbol,
+                const uint8_t   _token_precision);
 
     // @abi action
     void delall();
@@ -34,7 +36,16 @@ class distrib : public contract
                    const uint16_t _dist_percx100);
 
     // @abi action
+    void pauseparent (const account_name    _parentacct);
+
+    // @abi action
+    void unpausepar (const account_name     _parentacct);
+    
+    // @abi action
     void removeparent(const string _parentname);
+
+    // @abi action
+    void removeparact(const account_name _parentacct);
 
     // @abi action
     void addchild(const account_name _parent_acct,
@@ -47,16 +58,17 @@ class distrib : public contract
 
     // @abi action
     void removechild(const account_name _childacct);
-
+   
   private:
     // @abi table configs i64
     struct config
     {
-        account_name token_contract;
-        asset        example_asset;
-        account_name     primary_key() const { return token_contract; }
+        uint64_t        config_id;
+        account_name    token_contract;
+        symbol_type     token_symbol;
+        account_name    primary_key() const { return token_contract; }
 
-        EOSLIB_SERIALIZE(config, (token_contract)(example_asset));
+        EOSLIB_SERIALIZE(config, (config_id)(token_contract)(token_symbol));
     };
 
     typedef eosio::multi_index<N(configs), config> config_table;
@@ -70,7 +82,7 @@ class distrib : public contract
     };
 
     typedef eosio::multi_index<N(accounts), account> accounts;
-
+    
     // @abi table children i64
     struct child
     {
@@ -91,25 +103,27 @@ class distrib : public contract
                                           const_mem_fun<child, account_name, &child::bychild>>,
                                indexed_by<N(parent_acct),
                                           const_mem_fun<child, account_name, &child::byparent>>>
-        child_table;
+                        child_table;
 
     // @abi table parents i64
     struct parent
     {
-
         account_name parent_acct;
         string parent_name;
         uint16_t parent_share;
+        uint8_t    paused;
 
         account_name primary_key() const { return parent_acct; }
 
-        EOSLIB_SERIALIZE(parent, (parent_acct)(parent_name)(parent_share))
+        EOSLIB_SERIALIZE(parent, (parent_acct)(parent_name)(parent_share)(paused))
     };
 
     typedef eosio::multi_index<N(parents), parent> parent_table;
 
     const string DEFAULT_ACCOUNT = "default";
-
+    const uint8_t PAUSED = 1;
+    const uint8_t UNPAUSED = 0;
+    
     bool isInit()
     {
         parent_table p_table(_self, _self);
@@ -123,7 +137,6 @@ class distrib : public contract
             }
             itr++;
         }
-
         return false;
     }
 
@@ -152,7 +165,7 @@ class distrib : public contract
         accounts accountstable(itr->token_contract, account);
         auto itr_a = accountstable.begin();
 
-        while (itr_a != accountstable.end() && itr_a->balance.symbol != itr->example_asset.symbol) {
+        while (itr_a != accountstable.end() && itr_a->balance.symbol != itr->token_symbol) {
             itr_a++;
         }
 
@@ -185,4 +198,6 @@ class distrib : public contract
     }
 };
 
-EOSIO_ABI(distrib, (init)(distribute)(setcontract)(delall)(addparent)(removeparent)(addchild)(removecldpar)(removechild))
+EOSIO_ABI(distrib, (init)(distribute)(setcontract)(delall)(addparent)(removeparent)
+            (addchild)(removecldpar)(removechild)(removeparact)
+            (pauseparent)(unpausepar))

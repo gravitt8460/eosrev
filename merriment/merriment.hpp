@@ -10,48 +10,57 @@ public:
     merriment (account_name self) : contract (self) {}
 
     // @abi action
-    void setconfig (const account_name   _fund_source,
+    void addconfig (const account_name   _fund_source,
                     const account_name  _token_contract, 
                     const string        _token_symbol,
                     const uint8_t       _token_precision,
 
-                    const uint16_t      _affiliate_share,
-                    const uint16_t      _referrer_share,
-                    const uint16_t      _sp_share,
-                    const uint16_t      _disttree_share,
+                    const uint16_t      _onboarding_daysx100,
+                    const uint16_t      _ob_affiliate_sharex100,
+                    const uint16_t      _ob_referrer_sharex100,
+                    const uint16_t      _ob_sp_sharex100,
+                    const uint16_t      _ob_disttree_sharex100,
+
+                    const uint16_t      _affiliate_sharex100,
+                    const uint16_t      _referrer_sharex100,
+                    const uint16_t      _sp_sharex100,
+                    const uint16_t      _disttree_sharex100,
                     const account_name  _disttree_account,
                     
                     const uint32_t      _deposit_count,
                     const asset         _post_count_dep );
 
     // @abi action
-    void newcountdist (const account_name    _from_account,
-                        const account_name    _to_account,
-                        const asset            _token_amount,
-                        const uint32_t        _lower_account,
-                        const uint32_t        _upper_account);
+    void newcountdist (const account_name   _from_account,
+                        const account_name  _to_account,
+                        const asset         _token_amount,
+                        const uint32_t      _lower_account,
+                        const uint32_t      _upper_account);
                       
     // @abi action
     void delcountdist (const uint64_t _counddist_id);
 
     // @abi action
-    void newmaccount (const account_name _m_account,
-                        const string _web_account,
-                        const account_name referrer,
-                        const account_name  success_partner) ;
+    void newmaccount (  const uint64_t      _config_id,
+                        const account_name  _m_account,
+                        const string        _web_account,
+                        const account_name  _referrer,
+                        const account_name  _success_partner,
+                        const uint8_t       _account_type) ;
 
     // @abi action
-    void revenueevent (const account_name _buyer, 
-                        const account_name _seller,
-                        const asset _revenue ) ;
+    void revenueevent ( const uint64_t      _config,
+                        const account_name  _buyer, 
+                        const account_name  _seller,
+                        const asset         _revenue,
+                        const account_name  _publisher,
+                        const uint16_t      _publisher_share ) ;
 
 
 private:
 
-    // TODO: transition to singleton
     // @abi table configs i64
     struct config {
-
         uint64_t        config_id;
         // basic financial config
         account_name    fund_source;
@@ -59,41 +68,62 @@ private:
         symbol_type     token_symbol;
 
         // revenue share config
-        uint16_t        affiliate_share;
-        uint16_t        referrer_share;
-        uint16_t        sp_share;
-        uint16_t        disttree_share;
+        uint16_t        onboarding_days;
+        uint16_t        ob_affiliate_sharex100;
+        uint16_t        ob_referrer_sharex100;
+        uint16_t        ob_sp_sharex100;
+        uint16_t        ob_disttree_sharex100;
+
+        uint16_t        affiliate_sharex100;
+        uint16_t        referrer_sharex100;
+        uint16_t        sp_sharex100;
+        uint16_t        disttree_sharex100;
         account_name    disttree_account;
 
         // new account deposit info
         uint32_t        deposit_count;
         asset           post_count_dep;
 
-        // calculated field 
-        uint32_t        user_count;
-
         uint64_t    primary_key() const { return config_id; }
 
         EOSLIB_SERIALIZE (config, (config_id)(fund_source)(token_contract)(token_symbol)
-                                    (affiliate_share)(referrer_share)(sp_share)(disttree_share)(disttree_account)
-                                   (deposit_count)(post_count_dep)(user_count));
+                                    (onboarding_days)(ob_affiliate_sharex100)(ob_referrer_sharex100)(ob_sp_sharex100)(ob_disttree_sharex100)
+                                    (affiliate_sharex100)(referrer_sharex100)(sp_sharex100)(disttree_sharex100)(disttree_account)
+                                   (deposit_count)(post_count_dep));
     };
 
     typedef eosio::multi_index<N(configs), config> config_table;
 
     // @abi table maccounts i64
     struct maccount {
+        uint64_t        account_id;
         account_name    m_account;
+        uint32_t        created_date;
         string          web_account;
         account_name    referrer;
         account_name    success_partner;
+        uint8_t         account_type;
 
-        account_name    primary_key() const { return m_account; }
+        uint64_t        primary_key()   const { return account_id; }
+        account_name    byaccount()     const { return m_account; }
+        account_name    byreferrer()    const { return referrer; }
+        account_name    bysp()          const { return success_partner; }
 
-        EOSLIB_SERIALIZE (maccount, (m_account)(web_account)(referrer)(success_partner));
+        EOSLIB_SERIALIZE (maccount, (account_id)(m_account)(created_date)(web_account)(referrer)(success_partner)(account_type));
     };
 
-    typedef eosio::multi_index<N(maccounts), maccount> maccount_table;
+    const uint8_t AFFILIATE = 1;
+    const uint8_t BUSINESS = 2;
+    const uint8_t COMBINATION = 3;
+
+    typedef eosio::multi_index<N(maccounts), maccount,
+                                indexed_by<N(m_account), 
+                                        const_mem_fun<maccount, account_name, &maccount::byaccount>>,
+                                indexed_by<N(referrer),
+                                        const_mem_fun<maccount, account_name, &maccount::byreferrer>>,
+                                indexed_by<N(success_partner),
+                                        const_mem_fun<maccount, account_name, &maccount::bysp>>>
+            maccount_table;
 
     // @abi table countdists i64
     struct countdist {
@@ -140,4 +170,4 @@ private:
 
 };
 
-EOSIO_ABI (merriment, (setconfig)(newcountdist)(delcountdist)(newmaccount)(revenueevent))
+EOSIO_ABI (merriment, (addconfig)(newcountdist)(delcountdist)(newmaccount)(revenueevent))

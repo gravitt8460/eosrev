@@ -7,7 +7,8 @@
 //using namespace std;
 
 void distrib::init (const account_name _token_contract,
-                    const asset         _example_asset) {
+                    const string         _token_symbol,
+                    const uint8_t        _token_precision) {
 
     eosio_assert (!isInit(), "Configuration has already been set.");
     parent_table p_table (_self, _self);
@@ -20,15 +21,18 @@ void distrib::init (const account_name _token_contract,
     config_table config (_self, _self);
     config.emplace (_self, [&](auto& c) {
         c.token_contract = _token_contract;
-        c.example_asset = _example_asset;
+        c.token_symbol =  string_to_symbol(_token_precision, _token_symbol.c_str());
     });
 }
 
 //TODO: Add asset to the set contract function
-void distrib::setcontract (const account_name _token_contract) {
+void distrib::setcontract (const account_name _token_contract, 
+                            const string _token_symbol, 
+                            const uint8_t  _token_precision) {
     config_table config (_self, _self);
     auto itr = config.begin();
     config.modify (itr, _self, [&](auto& c) {
+        c.token_symbol      =  string_to_symbol(_token_precision, _token_symbol.c_str());
         c.token_contract = _token_contract;
     });
 }
@@ -44,7 +48,7 @@ void distrib::distribute () {
 
     auto p_itr = p_table.begin();
     while (p_itr != p_table.end()) {
-        if (p_itr->parent_acct == _self) { p_itr++; continue; }
+        if (p_itr->parent_acct == _self || p_itr->paused == PAUSED) { p_itr++; continue; }
 
         auto p_xfer_amount = p_itr->parent_share * balance_to_dist / 100;
         transfer (_self, p_itr->parent_acct, p_xfer_amount, "auto distribution");
@@ -112,6 +116,22 @@ void distrib::addparent ( const string       _parentname,
     print (_parentname, " parent added.");
 }
 
+void distrib::pauseparent (const account_name   _parentacct) {
+    parent_table p_table (_self, _self);
+    auto p_itr = p_table.find (_parentacct);
+    p_table.modify (p_itr, _self, [&](auto& p) {
+        p.paused = PAUSED;
+    });
+}
+
+void distrib::unpausepar (const account_name   _parentacct) {
+    parent_table p_table (_self, _self);
+    auto p_itr = p_table.find (_parentacct);
+    p_table.modify (p_itr, _self, [&](auto& p) {
+        p.paused = UNPAUSED;
+    });
+}
+
 
  void distrib::removeparent (const string _parentname ) {
 
@@ -139,6 +159,31 @@ void distrib::addparent ( const string       _parentname,
     p_itr = p_table.erase (p_itr);
 
     print (_parentname, " parent removed.");
+ }
+
+ void distrib::removeparact (const account_name _parentacct ) {
+
+    eosio_assert (isInit(), "Contract must first be initialized by calling init.");
+    
+    parent_table p_table (_self, _self);
+        
+    auto p_itr = p_table.find(_parentacct);
+    eosio_assert (p_itr != p_table.end(), "Parent not found.");
+    eosio_assert (p_itr->parent_name.compare(DEFAULT_ACCOUNT) != 0, "Invalid name: cannot remove DEFAULT ACCOUNT parent.");
+    
+    auto default_itr = p_table.begin();
+    while (default_itr != p_table.end() || default_itr->parent_name.compare (DEFAULT_ACCOUNT) == 0) {
+        if (default_itr->parent_name.compare (DEFAULT_ACCOUNT) == 0) {
+            p_table.modify (default_itr, _self, [&](auto& p) {
+                p.parent_share = p.parent_share + p_itr->parent_share;
+            });
+        }
+        default_itr++;
+    }
+
+    p_itr = p_table.erase (p_itr);
+
+    print (" parent removed.");
  }
  
 
@@ -203,3 +248,5 @@ void distrib::removechild (const account_name    _childacct) {
         c_itr = child_index.erase (c_itr);
     }
  }
+
+
